@@ -2,8 +2,7 @@
    1. ÜNİVERSİTE VERİ TABANI (Yerel Liste)
 ===================== */
 const UNIVERSITIES = [
-  "Abdullah Gül Üniversitesi", "Acıbadem Mehmet Ali Aydınlar Üniversitesi", "Afyon Kocatepe Üniversitesi", "Akdeniz Üniversitesi", "Anadolu Üniversitesi", "Ankara Üniversitesi", "Atatürk Üniversitesi", "Bahçeşehir Üniversitesi", "Balıkesir Üniversitesi", "Başkent Üniversitesi", "Beykoz Üniversitesi", "Boğaziçi Üniversitesi", "Bursa Uludağ Üniversitesi", "Çanakkale Onsekiz Mart Üniversitesi", "Çukurova Üniversitesi", "Dokuz Eylül Üniversitesi", "Ege Üniversitesi", "Erciyes Üniversitesi", "Fırat Üniversitesi", "Galatasaray Üniversitesi", "Gazi Üniversitesi", "Gaziantep Üniversitesi", "Hacettepe Üniversitesi", "İstanbul Teknik Üniversitesi", "İstanbul Üniversitesi", "İzmir Ekonomi Üniversitesi", "Koç Üniversitesi", "Marmara Üniversitesi", "Orta Doğu Teknik Üniversitesi", "Özyeğin Üniversitesi", "Sabancı Üniversitesi", "Yeditepe Üniversitesi", "Yıldız Teknik Üniversitesi", "Zonguldak Bülent Ecevit Üniversitesi"
-  // ... diğerleri aynı kalabilir
+  "Abdullah Gül Üniversitesi", "Acıbadem Mehmet Ali Aydınlar Üniversitesi", "Afyon Kocatepe Üniversitesi", "Afyonkarahisar Sağlık Bilimleri Üniversitesi", "Ağrı İbrahim Çeçen Üniversitesi", "Akdeniz Üniversitesi", "Aksaray Üniversitesi", "Alanya Alaaddin Keykubat Üniversitesi", "Alanya Üniversitesi", "Amasya Üniversitesi", "Anadolu Üniversitesi", "Anka Teknoloji Üniversitesi", "Ankara Bilim Üniversitesi", "Ankara Hacı Bayram Veli Üniversitesi", "Ankara Medipol Üniversitesi", "Ankara Müzik ve Güzel Sanatlar Üniversitesi", "Ankara Sosyal Bilimler Üniversitesi", "Ankara Üniversitesi", "Ankara Yıldırım Beyazıt Üniversitesi", "Antalya Belek Üniversitesi", "Antalya Bilim Üniversitesi", "Ardahan Üniversitesi", "Artvin Çoruh Üniversitesi", "Ataşehir Adıgüzel Meslek Yüksekokulu", "Atatürk Üniversitesi", "Atılım Üniversitesi", "Avrasya Üniversitesi", "Aydın Adnan Menderes Üniversitesi", "Babylon Üniversitesi", "Bahçeşehir Üniversitesi", "Balıkesir Üniversitesi", "Bandırma Onyedi Eylül Üniversitesi", "Bartın Üniversitesi", "Başkent Üniversitesi", "Batman Üniversitesi", "Bayburt Üniversitesi", "Beykent Üniversitesi", "Beykoz Üniversitesi", "Bezmialem Vakıf Üniversitesi", "Bilecik Şeyh Edebali Üniversitesi", "Bingöl Üniversitesi", "Biruni Üniversitesi", "Bitlis Eren Üniversitesi", "Boğaziçi Üniversitesi", "Bursa Teknik Üniversitesi", "Bursa Uludağ Üniversitesi", "Çağ Üniversitesi", "Çanakkale Onsekiz Mart Üniversitesi", "Çankaya Üniversitesi", "Çankırı Karatekin Üniversitesi", "Çukurova Üniversitesi", "Dicle Üniversitesi", "Doğuş Üniversitesi", "Dokuz Eylül Üniversitesi", "Ege Üniversitesi", "Erciyes Üniversitesi", "Fırat Üniversitesi", "Galatasaray Üniversitesi", "Gazi Üniversitesi", "Gaziantep Üniversitesi", "Hacettepe Üniversitesi", "İstanbul Teknik Üniversitesi", "İstanbul Üniversitesi", "İzmir Ekonomi Üniversitesi", "Koç Üniversitesi", "Marmara Üniversitesi", "Orta Doğu Teknik Üniversitesi", "Özyeğin Üniversitesi", "Sabancı Üniversitesi", "Yeditepe Üniversitesi", "Yıldız Teknik Üniversitesi", "Zonguldak Bülent Ecevit Üniversitesi"
 ];
 
 /* =====================
@@ -22,6 +21,7 @@ const ALIASES = {
   "ytü": "Yıldız Teknik Üniversitesi"
 };
 
+const API_BASE = "https://gardaslar.onrender.com"; // Canlı backend adresin
 const INPUT = document.getElementById("searchInput");
 const RESULT = document.getElementById("results");
 
@@ -38,7 +38,7 @@ function superNormalize(str = "") {
 }
 
 /* =====================
-   4. ARAMA MOTORU (FIREBASE & BACKEND BAĞLANTILI)
+   4. ARAMA MOTORU
 ===================== */
 async function search() {
   if (!INPUT || !RESULT) return;
@@ -48,17 +48,17 @@ async function search() {
   RESULT.innerHTML = "";
   if (q.length < 2) return;
 
-  // --- A. OKUL ARAMA (Yerel Listeden ve Aliaslardan) ---
+  // --- A. OKUL ARAMA ---
   let foundSchools = new Set();
   
-  // Alias kontrolü (Metu yazınca ODTÜ çıksın)
+  // Alias (METU/ODTÜ) kontrolü
   Object.keys(ALIASES).forEach(key => {
     if (superNormalize(key).includes(q)) {
       foundSchools.add(ALIASES[key]);
     }
   });
 
-  // Normal isim kontrolü
+  // Normal okul listesi kontrolü
   UNIVERSITIES.forEach(s => {
     if (superNormalize(s).includes(q)) {
       foundSchools.add(s);
@@ -79,10 +79,10 @@ async function search() {
     RESULT.appendChild(card);
   });
 
-  // --- B. HOCA ARAMA (BACKEND / FIREBASE ÜZERİNDEN) ---
+  // --- B. HOCA ARAMA (BACKEND / FIREBASE) ---
   try {
-// search fonksiyonunun içindeki fetch satırı tam olarak böyle olmalı:
-const response = await fetch(`https://gardaslar.onrender.com/api/search?q=${encodeURIComponent(q)}`);    const data = await response.json();
+    const response = await fetch(`${API_BASE}/api/search?q=${encodeURIComponent(rawQ)}`);
+    const data = await response.json();
 
     if (data.profs && data.profs.length > 0) {
       data.profs.forEach(p => {
@@ -90,11 +90,10 @@ const response = await fetch(`https://gardaslar.onrender.com/api/search?q=${enco
         card.className = "card";
         card.innerHTML = `
           <div class="title">👨‍🏫 ${p.name}</div>
-          <div class="sub">${p.school} - ${p.department || ""}</div>
+          <div class="sub">${p.school}</div>
           <div class="card-foot"><span class="rating">Profili Aç</span></div>
         `;
         card.onclick = () => {
-          // Firebase'den gelen döküman ID'sini kullanıyoruz
           window.location.href = `profile.html?id=${p.id}&name=${encodeURIComponent(p.name)}&school=${encodeURIComponent(p.school)}`;
         };
         RESULT.appendChild(card);
@@ -104,7 +103,7 @@ const response = await fetch(`https://gardaslar.onrender.com/api/search?q=${enco
     console.error("Hoca verisi çekilemedi:", err);
   }
 
-  // Eğer hiçbir şey bulunamadıysa
+  // Sonuç yoksa mesaj çıkar
   if (foundSchools.size === 0 && RESULT.innerHTML === "") {
     RESULT.innerHTML = `<div class="empty">Sonuç bulunamadı</div>`;
   }
