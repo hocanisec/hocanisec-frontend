@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hoca Profili | HocanıSeç</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Yararlı Butonu ve Mesaj Stilleri */
+    .comment-votes { display: flex; gap: 10px; margin-top: 12px; border-top: 1px dashed #e5e7eb; padding-top: 10px; }
+    .vote-btn { 
+      background: #f8fafc; border: 1px solid #e2e8f0; padding: 6px 12px; 
+      border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 700;
+      display: flex; align-items: center; gap: 6px; color: #64748b; transition: all 0.2s;
+    }
+    .vote-btn:hover { background: #eff6ff; border-color: #2563eb; color: #2563eb; }
+    .vote-btn span { color: #2563eb; }
+    .hint { margin-top: 10px; font-size: 14px; font-weight: 600; }
+    .hint.ok { color: #16a34a; }
+    .hint.err { color: #dc2626; }
+  </style>
+</head>
+<body>
+
+<header class="navbar navbar-plain">
+  <div class="nav-inner">
+    <a class="logo" href="index.html">hocaniseç</a>
+    <nav class="nav-links">
+      <a href="index.html">Ana Sayfa</a>
+      <a class="nav-cta" href="auth.html" id="authBtn">Giriş Yap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <div class="container">
+    <a class="back-link" href="index.html">← Ana sayfaya dön</a>
+
+    <section class="profile-head">
+      <div class="profile-main">
+        <div class="avatar-lg" id="avatar">HS</div>
+        <div class="profile-text">
+          <h1 id="name">Hoca Adı Yükleniyor...</h1>
+          <p class="muted" id="school"></p>
+        </div>
+      </div>
+
+      <div class="score-card">
+        <div class="score" id="avgRatingDisplay">0.0</div>
+        <div class="muted">Genel Puan</div>
+        <div class="score-meta">
+          <span><strong id="commentCount">0</strong> yorum</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="two-col">
+      <!-- SOL KOLON: YORUM FORMU -->
+      <div class="panel">
+        <h2>Deneyimini paylaş</h2>
+        <p class="muted">Sadece doğrulanmış öğrenciler yorum yapabilir.</p>
+
+        <label class="field">
+          <span class="field-label">Puan Ver</span>
+          <select id="commentRating">
+            <option value="5">5 ⭐ Mükemmel</option>
+            <option value="4">4 ⭐ İyi</option>
+            <option value="3">3 ⭐ Orta</option>
+            <option value="2">2 ⭐ Zayıf</option>
+            <option value="1">1 ⭐ Kötü</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span class="field-label">Yorumun</span>
+          <textarea id="commentText" placeholder="Bu hocayla ilgili dürüst deneyimini yaz..."></textarea>
+        </label>
+
+        <button class="btn" id="submitComment" type="button">Yorumu Gönder</button>
+        <p id="hintBox" class="hint"></p>
+      </div>
+
+      <!-- SAĞ KOLON: YORUMLAR -->
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Yorumlar</h2>
+        </div>
+        <div id="comments">
+          <p class="muted">Yorumlar yükleniyor...</p>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+  // 1. AYARLAR VE PARAMETRELER
+  const API_BASE = "https://gardaslar.onrender.com"; 
+  const params = new URLSearchParams(window.location.search);
+  const profId = params.get("id"); // Firebase'deki döküman ID'si
+  const profName = params.get("name") || "Bilinmeyen Hoca";
+  const schoolName = params.get("school") || "";
+
+  // Elementler
+  const nameEl = document.getElementById("name");
+  const schoolEl = document.getElementById("school");
+  const avatarEl = document.getElementById("avatar");
+  const commentsDiv = document.getElementById("comments");
+  const hintBox = document.getElementById("hintBox");
+  const token = localStorage.getItem("hocaniseç_token");
+
+  // Sayfayı Başlat
+  nameEl.innerText = profName;
+  schoolEl.innerText = schoolName;
+  const initials = profName.split(" ").slice(0,2).map(s => s[0]).join("").toUpperCase();
+  avatarEl.innerText = initials || "HS";
+  if(token) document.getElementById("authBtn").innerText = "Profilim";
+
+  function escapeHtml(str) {
+    if(!str) return "";
+    return String(str).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+  }
+
+  // 2. YORUMLARI ÇEKME FONKSİYONU
+  async function loadComments() {
+    if (!profId) {
+      commentsDiv.innerHTML = "<p class='muted'>Hoca bilgisi eksik.</p>";
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/api/comments/${profId}`);
+      const comments = await res.json();
+
+      document.getElementById("commentCount").innerText = comments.length;
+      commentsDiv.innerHTML = "";
+
+      if (comments.length === 0) {
+        document.getElementById("avgRatingDisplay").innerText = "0.0";
+        commentsDiv.innerHTML = "<p class='muted'>Henüz onaylanmış yorum yok. İlkini sen yaz!</p>";
+        return;
+      }
+
+      let total = 0;
+      comments.forEach(c => {
+        total += Number(c.rating);
+        const div = document.createElement("div");
+        div.className = "comment-card";
+        div.style.marginBottom = "15px";
+        div.innerHTML = `
+          <div class="comment-top">
+            <div class="pill">${c.rating} ⭐</div>
+            <div class="muted">${new Date(c.createdAt).toLocaleDateString("tr-TR")}</div>
+          </div>
+          <p style="margin-top:8px;">${escapeHtml(c.text)}</p>
+          <div class="comment-votes">
+            <button class="vote-btn" onclick="voteComment('${c.id}')">
+              👍 Yararlı <span id="v-${c.id}">${c.helpful || 0}</span>
+            </button>
+          </div>
+        `;
+        commentsDiv.appendChild(div);
+      });
+
+      document.getElementById("avgRatingDisplay").innerText = (total / comments.length).toFixed(1);
+    } catch (err) {
+      commentsDiv.innerHTML = "<p class='hint err'>Yorumlar şu an çekilemiyor.</p>";
+    }
+  }
+
+  // 3. YORUM GÖNDERME FONKSİYONU
+  async function addComment() {
+    const text = document.getElementById("commentText").value.trim();
+    const rating = document.getElementById("commentRating").value;
+
+    if (!token) {
+      alert("Yorum yazmak için önce giriş yapmalısın!");
+      window.location.href = "auth.html";
+      return;
+    }
+
+    if (text.length < 10) {
+      hintBox.innerText = "Yorum çok kısa (en az 10 karakter).";
+      hintBox.className = "hint err";
+      return;
+    }
+
+    try {
+      hintBox.innerText = "Gönderiliyor...";
+      const res = await fetch(`${API_BASE}/api/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profId, text, rating, token })
+      });
+      const data = await res.json();
+
+      if (data.ok) {
+        hintBox.innerText = "Yorum onay için gönderildi! 🙌";
+        hintBox.className = "hint ok";
+        document.getElementById("commentText").value = "";
+      } else {
+        hintBox.innerText = data.error || "Hata oluştu.";
+        hintBox.className = "hint err";
+      }
+    } catch (err) {
+      hintBox.innerText = "Sunucuya bağlanılamadı.";
+      hintBox.className = "hint err";
+    }
+  }
+
+  // 4. OYLAMA FONKSİYONU
+  async function voteComment(commentId) {
+    try {
+      const res = await fetch(`${API_BASE}/api/comments/${commentId}/vote`, { method: "POST" });
+      const data = await res.json();
+      if (data.ok) {
+        const el = document.getElementById(`v-${commentId}`);
+        el.innerText = parseInt(el.innerText) + 1;
+      }
+    } catch (err) { console.error("Oylama başarısız"); }
+  }
+
+  // Başlatıcılar
+  document.getElementById("submitComment").addEventListener("click", addComment);
+  loadComments();
+</script>
+
+</body>
+</html>

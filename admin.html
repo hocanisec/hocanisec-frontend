@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>HocanıSeç | Admin Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- FONT -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- ANA CSS -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="admin-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <h2>hocaniseç</h2>
+
+    <nav>
+      <button data-view="dashboard">Dashboard</button>
+      <button data-view="professors">Hocalar</button>
+      <button data-view="schools">Okullar</button>
+      <!-- 🔹 YENİ -->
+      <button data-view="comments">Yorumlar</button>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="admin-main">
+
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="admin-view active">
+      <h1>Dashboard</h1>
+
+      <div class="admin-stats">
+        <div class="stat-card">
+          <strong id="profCount">0</strong>
+          <span>Hoca</span>
+        </div>
+
+        <div class="stat-card">
+          <strong id="schoolCount">0</strong>
+          <span>Okul</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOCALAR -->
+    <section id="professors" class="admin-view">
+      <h1>Hocalar</h1>
+
+      <form id="profForm" class="admin-form">
+        <input
+          type="text"
+          id="profName"
+          placeholder="Hoca adı"
+          required
+        />
+        <input
+          type="text"
+          id="profSchool"
+          placeholder="Okul"
+          required
+        />
+        <button type="submit">Ekle</button>
+      </form>
+
+      <ul id="profList" class="admin-list"></ul>
+    </section>
+
+    <!-- OKULLAR -->
+    <section id="schools" class="admin-view">
+      <h1>Okullar</h1>
+
+      <form id="schoolForm" class="admin-form">
+        <input
+          type="text"
+          id="schoolName"
+          placeholder="Okul adı"
+          required
+        />
+        <button type="submit">Ekle</button>
+      </form>
+
+      <ul id="schoolList" class="admin-list"></ul>
+    </section>
+
+    <!-- 🔹 YORUM ONAYI -->
+    <section id="comments" class="admin-view">
+      <h1>Yorum Onayı</h1>
+      <p class="muted">Kullanıcıların gönderdiği yorumları buradan onaylayabilir veya silebilirsin.</p>
+      <ul id="commentList" class="admin-list"></ul>
+    </section>
+
+  </main>
+</div>
+
+<!-- ADMIN JS -->
+<script src="admin.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Okul Profili</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header class="navbar navbar-plain">
+  <div class="nav-inner">
+    <a class="logo" href="index.html">hocaniseç</a>
+    <nav class="nav-links">
+      <a href="index.html#okullar">Okullar</a>
+      <a href="index.html#hocalar">Hocalar</a>
+      <a class="nav-cta" href="index.html#gir">Giriş</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <div class="container">
+    <a class="back-link" href="index.html#okullar">← Okullara dön</a>
+
+    <section class="school-head">
+      <h1 id="schoolName">Okul</h1>
+      <p class="muted">Kategorilere göre puanlar</p>
+    </section>
+
+    <section class="school-grid">
+      <div class="metric">
+        <div class="metric-top">
+          <span>🎓 Akademik</span>
+          <strong id="academic">0.0</strong>
+        </div>
+        <div class="bar"><i id="barAcademic"></i></div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-top">
+          <span>🏫 Kampüs</span>
+          <strong id="campus">0.0</strong>
+        </div>
+        <div class="bar"><i id="barCampus"></i></div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-top">
+          <span>👨‍🏫 Eğitmenler</span>
+          <strong id="staff">0.0</strong>
+        </div>
+        <div class="bar"><i id="barStaff"></i></div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-top">
+          <span>🌍 Sosyal</span>
+          <strong id="social">0.0</strong>
+        </div>
+        <div class="bar"><i id="barSocial"></i></div>
+      </div>
+    </section>
+
+    <section class="panel school-summary">
+      <h2>Genel görünüm</h2>
+      <p class="muted" id="avgText">—</p>
+    </section>
+  </div>
+</main>
+
+<script>
+  const p = new URLSearchParams(window.location.search);
+
+  const name = p.get("name") || "Okul";
+  const academic = Number(p.get("academic") || 0);
+  const campus = Number(p.get("campus") || 0);
+  const staff = Number(p.get("staff") || 0);
+  const social = Number(p.get("social") || 0);
+
+  document.getElementById("schoolName").innerText = name;
+
+  function setMetric(id, val) {
+    document.getElementById(id).innerText = val.toFixed(1) + " ⭐";
+  }
+  setMetric("academic", academic);
+  setMetric("campus", campus);
+  setMetric("staff", staff);
+  setMetric("social", social);
+
+  function setBar(id, val) {
+    const pct = Math.max(0, Math.min(100, (val / 5) * 100));
+    document.getElementById(id).style.width = pct + "%";
+  }
+  setBar("barAcademic", academic);
+  setBar("barCampus", campus);
+  setBar("barStaff", staff);
+  setBar("barSocial", social);
+
+  const avg = (academic + campus + staff + social) / 4;
+  document.getElementById("avgText").innerText =
+    "Ortalama puan: " + avg.toFixed(1) + " ⭐ (4 kategori ortalaması)";
+</script>
+
+</body>
+</html>

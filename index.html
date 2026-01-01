@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hocanı Seç | Üniversite ve Hoca Keşfet</title>
+
+  <!-- Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header class="navbar">
+  <div class="nav-inner">
+    <a class="logo" href="index.html">hocaniseç</a>
+
+    <nav class="nav-links">
+      <a href="#features">Hocalar</a>
+      <a href="#features">Okullar</a>
+      <a class="nav-cta" href="auth.html">Giriş Yap</a>
+    </nav>
+
+    <button class="nav-toggle">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<main>
+
+  <!-- HERO (Arama Alanı) -->
+  <section class="hero" id="kesfet">
+    <div class="container hero-grid">
+      <div>
+        <div class="badge">🎓 Öğrenci yorumlarıyla karar ver</div>
+
+        <h1>Hocanı seçmeden önce öğren.</h1>
+
+        <p class="lead">
+          Türkiye'deki 200+ üniversiteyi ve binlerce hocayı gerçek öğrenci deneyimleriyle keşfet.
+        </p>
+
+        <!-- ARAMA KUTUSU -->
+        <div class="search">
+          <input id="searchInput" type="text" placeholder="Hoca veya okul ara... (Örn: ODTÜ veya Celal Şengör)" />
+          <button id="searchBtn" type="button">Ara</button>
+        </div>
+
+        <!-- HIZLI BUTONLAR -->
+        <div class="quick-chips" id="quickChips">
+          <button type="button" data-value="ODTÜ">ODTÜ</button>
+          <button type="button" data-value="Boğaziçi">Boğaziçi</button>
+          <button type="button" data-value="İTÜ">İTÜ</button>
+          <button type="button" data-value="Hacettepe">Hacettepe</button>
+        </div>
+
+        <!-- ARAMA SONUÇLARI BURAYA GELECEK -->
+        <div id="results" class="cards-grid"></div>
+
+        <p class="meta">
+          ⭐ 50.000+ yorum · 👨‍🏫 10.000+ hoca · 🏫 200+ üniversite
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ÖZELLİKLER BÖLÜMÜ -->
+  <section class="section section-alt" id="features">
+    <div class="container">
+      <div class="section-head">
+        <h2>Karar vermeyi kolaylaştır.</h2>
+        <p class="muted">Kısa, net ve anonim geri bildirimlerle.</p>
+      </div>
+
+      <div class="grid-3">
+        <div class="feature">
+          <div class="feature-ico">💬</div>
+          <h3>Gerçek öğrenci yorumları</h3>
+          <p>Hocalar anlatım, adalet ve zorluk gibi başlıklarda değerlendirilir.</p>
+        </div>
+
+        <div class="feature">
+          <div class="feature-ico">⚖️</div>
+          <h3>Kıyasla ve seç</h3>
+          <p>Aynı okul/bölüm içinde hocaları yan yana düşünmek çok daha kolay.</p>
+        </div>
+
+        <div class="feature">
+          <div class="feature-ico">🕵️‍♂️</div>
+          <h3>Anonim & rahat</h3>
+          <p>Yorumlar anonim. Amaç drama değil, gerçekten fayda sağlamak.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- JAVASCRIPT BAĞLANTISI -->
+<script src="script.js" defer></script>
+
+</body>
+</html>

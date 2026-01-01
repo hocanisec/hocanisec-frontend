@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HocanıSeç | Öğrenci Doğrulama</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* küçük ek stiller (istersen style.css'ye taşı) */
+    .auth-wrap{min-height:100vh; display:grid; place-items:center; padding:24px}
+    .auth-card{width:min(520px, 100%); background:white; border:1px solid #e5e7eb; border-radius:18px; box-shadow:0 10px 24px rgba(2,6,23,.08); padding:18px}
+    .auth-card h1{font-size:20px; margin-bottom:6px}
+    .auth-card p{color:#64748b; font-size:14px; margin-bottom:14px}
+    .row{display:flex; gap:10px; align-items:center}
+    .row > *{flex:1}
+    input{width:100%; border:1px solid #e5e7eb; border-radius:14px; padding:12px 12px; font-size:14px; outline:none}
+    input:focus{border-color: rgba(37,99,235,0.5); box-shadow: 0 0 0 4px rgba(37,99,235,0.12)}
+    button{border:none; cursor:pointer; padding:12px 14px; border-radius:14px; background:#2563eb; color:white; font-weight:800}
+    button:disabled{opacity:.6; cursor:not-allowed}
+    .muted{color:#64748b}
+    .msg{margin-top:10px; font-size:14px}
+    .msg.ok{color:#16a34a}
+    .msg.err{color:#dc2626}
+    .sep{height:1px; background:#e5e7eb; margin:14px 0}
+    .mini{font-size:13px}
+    .codeBox{display:none}
+    .codeBox.is-open{display:block}
+  </style>
+</head>
+<body>
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <h1>Öğrenci e-posta doğrulama</h1>
+      <p>Okul mailine 6 haneli kod gönderiyoruz. Kodla giriş yapıyorsun.</p>
+
+      <label class="mini muted">Öğrenci e-posta</label>
+      <div class="row" style="margin-top:6px">
+        <input id="email" type="email" placeholder="ornek@metu.edu.tr" autocomplete="email" />
+        <button id="sendBtn">Kodu Gönder</button>
+      </div>
+
+      <div id="codeBox" class="codeBox">
+        <div class="sep"></div>
+
+        <label class="mini muted">Doğrulama Kodu</label>
+        <div class="row" style="margin-top:6px">
+          <input id="code" type="text" inputmode="numeric" maxlength="6" placeholder="123456" />
+          <button id="verifyBtn">Doğrula</button>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <button id="resendBtn" style="background:#1e40af">Tekrar Gönder</button>
+          <button id="logoutBtn" style="background:#0f172a">Çıkış</button>
+        </div>
+      </div>
+
+      <div id="status" class="msg"></div>
+
+      <div class="sep"></div>
+      <div class="mini muted">
+        Giriş yaptıktan sonra yorum atma sayfasına geri dönebilirsin.
+      </div>
+    </div>
+  </div>
+
+  <script src="auth.js"></script>
+</body>
+</html>
