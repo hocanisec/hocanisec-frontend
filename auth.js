@@ -1,4 +1,3 @@
-// frontend/auth.js
 const API_BASE = "https://gardaslar.onrender.com";
 
 const els = {
@@ -6,136 +5,82 @@ const els = {
   code: document.getElementById("code"),
   sendBtn: document.getElementById("sendBtn"),
   verifyBtn: document.getElementById("verifyBtn"),
-  resendBtn: document.getElementById("resendBtn"),
-  logoutBtn: document.getElementById("logoutBtn"),
-  codeBox: document.getElementById("codeBox"),
   status: document.getElementById("status"),
+  codeBox: document.getElementById("codeBox"),
+  checkKVKK: document.getElementById("checkKVKK"),
+  checkTerms: document.getElementById("checkTerms"),
+  checkResp: document.getElementById("checkResponsibility")
 };
-
-const STORAGE_KEY = "hocaniseç_token";
-const EMAIL_KEY = "hocaniseç_email";
 
 function setMsg(text, type = "") {
   els.status.textContent = text || "";
   els.status.className = "msg " + (type || "");
 }
-function setLoading(btn, loading) {
-  btn.disabled = !!loading;
-  btn.textContent = loading ? "Bekle..." : btn.dataset.label;
-}
-function getToken() {
-  return localStorage.getItem(STORAGE_KEY) || "";
-}
-function setToken(token) {
-  localStorage.setItem(STORAGE_KEY, token);
-}
-function clearToken() {
-  localStorage.removeItem(STORAGE_KEY);
-}
-function rememberEmail(email) {
-  localStorage.setItem(EMAIL_KEY, email);
-}
-function getRememberedEmail() {
-  return localStorage.getItem(EMAIL_KEY) || "";
-}
-function normalizeEmail(email) {
-  return (email || "").trim().toLowerCase();
-}
-function showCodeBox(show) {
-  els.codeBox.classList.toggle("is-open", !!show);
-}
-function applyLoggedInUI() {
-  const token = getToken();
-  if (token) {
-    showCodeBox(true);
-    els.sendBtn.disabled = true;
-    setMsg("Giriş aktif ✅ İstersen tekrar doğrulayabilir ya da çıkış yapabilirsin.", "ok");
+
+// Sözleşme metinlerini gösteren yardımcı fonksiyon
+function showInfo(type) {
+  if (type === 'kvkk') {
+    alert("KVKK AYDINLATMA METNİ:\n1. E-posta adresiniz sadece doğrulama için tutulur.\n2. Kimliğiniz hocalarla veya 3. şahıslarla asla paylaşılmaz.\n3. Verileriniz güvenli sunucularda saklanır.");
   } else {
-    showCodeBox(false);
-    els.sendBtn.disabled = false;
-    setMsg("", "");
+    alert("KULLANIM KOŞULLARI:\n1. Hakaret ve küfür içerikli yorumlar silinir.\n2. Sadece gerçek deneyimler paylaşılmalıdır.\n3. Yanıltıcı bilgi vermek yasaktır.");
   }
-}
-
-async function apiPost(path, body) {
-  const res = await fetch(API_BASE + path, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body || {}),
-  });
-
-  let data = null;
-  try { data = await res.json(); } catch {}
-
-  if (!res.ok) {
-    const msg = (data && data.error) ? data.error : `Hata: ${res.status}`;
-    throw new Error(msg);
-  }
-  return data;
 }
 
 async function sendCode() {
-  const email = normalizeEmail(els.email.value);
-  if (!email) return setMsg("Email gir.", "err");
+  // ⚠️ ÇOK ÖNEMLİ: Onay kutuları kontrolü
+  if (!els.checkKVKK.checked || !els.checkTerms.checked || !els.checkResp.checked) {
+    setMsg("Lütfen tüm onay kutucuklarını işaretleyin.", "err");
+    return;
+  }
 
-  setMsg("", "");
-  setLoading(els.sendBtn, true);
+  const email = els.email.value.trim().toLowerCase();
+  if (!email || !email.includes(".edu.tr")) {
+    setMsg("Lütfen geçerli bir .edu.tr mail adresi girin.", "err");
+    return;
+  }
+
+  setMsg("Kod gönderiliyor...", "ok");
+  els.sendBtn.disabled = true;
 
   try {
-    await apiPost("/send-code", { email });
-    rememberEmail(email);
-    showCodeBox(true);
-    setMsg("Kod gönderildi. Mail kutunu kontrol et ✉️", "ok");
-    els.code.focus();
+    const res = await fetch(`${API_BASE}/send-code`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email })
+    });
+    const data = await res.json();
+    
+    if (!res.ok) throw new Error(data.error || "Sunucu hatası");
+
+    els.codeBox.classList.add("is-open");
+    setMsg("Kod gönderildi! Mail kutunu (ve spam klasörünü) kontrol et. ✉️", "ok");
   } catch (e) {
-    setMsg(e.message || "Kod gönderilemedi.", "err");
-  } finally {
-    setLoading(els.sendBtn, false);
+    setMsg(e.message, "err");
+    els.sendBtn.disabled = false;
   }
 }
 
 async function verifyCode() {
-  const email = normalizeEmail(els.email.value);
-  const code = (els.code.value || "").trim();
-
-  if (!email) return setMsg("Önce email gir.", "err");
-  if (!code || code.length < 4) return setMsg("Kod gir (genelde 6 hane).", "err");
-
-  setMsg("", "");
-  setLoading(els.verifyBtn, true);
+  const email = els.email.value.trim().toLowerCase();
+  const code = els.code.value.trim();
 
   try {
-    const data = await apiPost("/verify-code", { email, code });
-    if (data && data.token) setToken(data.token);
-    rememberEmail(email);
-    setMsg("Doğrulandı ✅ Artık yorum atabilirsin.", "ok");
+    const res = await fetch(`${API_BASE}/verify-code`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, code })
+    });
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error);
+
+    if (data.token) localStorage.setItem("hocaniseç_token", data.token);
+    setMsg("Giriş başarılı! Ana sayfaya gidiyorsun...", "ok");
+    setTimeout(() => window.location.href = "index.html", 2000);
   } catch (e) {
-    setMsg(e.message || "Kod doğrulanamadı.", "err");
-  } finally {
-    setLoading(els.verifyBtn, false);
+    setMsg(e.message, "err");
   }
 }
 
-function logout() {
-  clearToken();
-  setMsg("Çıkış yapıldı.", "");
-  applyLoggedInUI();
-}
-
-els.sendBtn.dataset.label = els.sendBtn.textContent;
-els.verifyBtn.dataset.label = els.verifyBtn.textContent;
-els.resendBtn.dataset.label = els.resendBtn.textContent;
-els.logoutBtn.dataset.label = els.logoutBtn.textContent;
-
-const remembered = getRememberedEmail();
-if (remembered) els.email.value = remembered;
-
 els.sendBtn.addEventListener("click", sendCode);
-els.resendBtn.addEventListener("click", sendCode);
 els.verifyBtn.addEventListener("click", verifyCode);
-els.logoutBtn.addEventListener("click", logout);
-
-els.email.addEventListener("keydown", (e) => { if (e.key === "Enter") sendCode(); });
-els.code.addEventListener("keydown", (e) => { if (e.key === "Enter") verifyCode(); });
-
-applyLoggedInUI();
