@@ -1,185 +1,119 @@
-/* =====================
-   ADMIN PANEL LOGIC
-   ===================== */
+const API_BASE = "https://gardaslar.onrender.com";
 
-const PROF_KEY = "admin_professors";
-const SCHOOL_KEY = "admin_schools";
-const PENDING_KEY = "pending_comments";
-
-/* ---------- VIEW SWITCH ---------- */
+/* ---------- GÖRÜNÜM DEĞİŞTİRME ---------- */
 const buttons = document.querySelectorAll(".admin-sidebar button");
 const views = document.querySelectorAll(".admin-view");
 
 buttons.forEach(btn => {
   btn.addEventListener("click", () => {
     const view = btn.dataset.view;
+    views.forEach(v => v.classList.toggle("active", v.id === view));
 
-    views.forEach(v => {
-      v.classList.toggle("active", v.id === view);
-    });
-
-    if (view === "comments") loadComments();
+    // Sekmeye tıklandığında veriyi yükle
     if (view === "dashboard") updateStats();
-    if (view === "professors") renderProfessors();
-    if (view === "schools") renderSchools();
+    if (view === "professors") loadProfessors();
+    if (view === "comments") loadPendingComments();
   });
 });
 
-/* ---------- DASHBOARD ---------- */
-function updateStats() {
-  const profs = JSON.parse(localStorage.getItem(PROF_KEY)) || [];
-  const schools = JSON.parse(localStorage.getItem(SCHOOL_KEY)) || [];
-
-  document.getElementById("profCount").innerText = profs.length;
-  document.getElementById("schoolCount").innerText = schools.length;
+/* ---------- DASHBOARD (İSTATİSTİKLER) ---------- */
+async function updateStats() {
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/stats`);
+    const data = await res.json();
+    document.getElementById("profCount").innerText = data.profCount || 0;
+    document.getElementById("schoolCount").innerText = data.schoolCount || 0;
+  } catch (err) { console.error("Dashboard yüklenemedi"); }
 }
 
-/* ---------- PROFESSORS ---------- */
+/* ---------- HOCA YÖNETİMİ ---------- */
 const profForm = document.getElementById("profForm");
-const profList = document.getElementById("profList");
 
-profForm.addEventListener("submit", e => {
+profForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-
   const name = document.getElementById("profName").value.trim();
   const school = document.getElementById("profSchool").value.trim();
 
-  if (!name || !school) return;
-
-  const profs = JSON.parse(localStorage.getItem(PROF_KEY)) || [];
-  profs.push({ name, school });
-  localStorage.setItem(PROF_KEY, JSON.stringify(profs));
-
-  profForm.reset();
-  renderProfessors();
-  updateStats();
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/professors`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, school })
+    });
+    if (res.ok) {
+      profForm.reset();
+      loadProfessors();
+      alert("Hoca Firebase'e eklendi!");
+    }
+  } catch (err) { alert("Hoca eklenemedi."); }
 });
 
-function renderProfessors() {
-  const profs = JSON.parse(localStorage.getItem(PROF_KEY)) || [];
-  profList.innerHTML = "";
-
-  profs.forEach((p, i) => {
-    const li = document.createElement("li");
-    li.innerHTML = `
-      <div>
-        <strong>${p.name}</strong>
-        <div class="muted">${p.school}</div>
-      </div>
-      <button onclick="deleteProfessor(${i})">Sil</button>
-    `;
-    profList.appendChild(li);
-  });
+async function loadProfessors() {
+  const list = document.getElementById("profList");
+  list.innerHTML = "<li>Yükleniyor...</li>";
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/professors`);
+    const profs = await res.json();
+    list.innerHTML = "";
+    profs.forEach(p => {
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <div><strong>${p.name}</strong> <span class="muted">(${p.school})</span></div>
+        <button onclick="deleteProfessor('${p.id}')" style="background:#dc2626">Sil</button>
+      `;
+      list.appendChild(li);
+    });
+  } catch (err) { list.innerHTML = "<li>Hocalar çekilemedi.</li>"; }
 }
 
-function deleteProfessor(i) {
-  const profs = JSON.parse(localStorage.getItem(PROF_KEY)) || [];
-  profs.splice(i, 1);
-  localStorage.setItem(PROF_KEY, JSON.stringify(profs));
-  renderProfessors();
-  updateStats();
+async function deleteProfessor(id) {
+  if (!confirm("Bu hocayı silmek istediğine emin misin?")) return;
+  await fetch(`${API_BASE}/api/admin/professors/${id}`, { method: "DELETE" });
+  loadProfessors();
 }
 
-/* ---------- SCHOOLS ---------- */
-const schoolForm = document.getElementById("schoolForm");
-const schoolList = document.getElementById("schoolList");
-
-schoolForm.addEventListener("submit", e => {
-  e.preventDefault();
-
-  const name = document.getElementById("schoolName").value.trim();
-  if (!name) return;
-
-  const schools = JSON.parse(localStorage.getItem(SCHOOL_KEY)) || [];
-  schools.push(name);
-  localStorage.setItem(SCHOOL_KEY, JSON.stringify(schools));
-
-  schoolForm.reset();
-  renderSchools();
-  updateStats();
-});
-
-function renderSchools() {
-  const schools = JSON.parse(localStorage.getItem(SCHOOL_KEY)) || [];
-  schoolList.innerHTML = "";
-
-  schools.forEach((s, i) => {
-    const li = document.createElement("li");
-    li.innerHTML = `
-      <span>${s}</span>
-      <button onclick="deleteSchool(${i})">Sil</button>
-    `;
-    schoolList.appendChild(li);
-  });
-}
-
-function deleteSchool(i) {
-  const schools = JSON.parse(localStorage.getItem(SCHOOL_KEY)) || [];
-  schools.splice(i, 1);
-  localStorage.setItem(SCHOOL_KEY, JSON.stringify(schools));
-  renderSchools();
-  updateStats();
-}
-
-/* ---------- COMMENT APPROVAL ---------- */
-function loadComments() {
+/* ---------- YORUM ONAYLAMA ---------- */
+async function loadPendingComments() {
   const list = document.getElementById("commentList");
-  const comments = JSON.parse(localStorage.getItem(PENDING_KEY)) || [];
+  list.innerHTML = "<li>Yorumlar yükleniyor...</li>";
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/pending-comments`);
+    const comments = await res.json();
+    list.innerHTML = "";
 
-  list.innerHTML = "";
+    if (comments.length === 0) {
+      list.innerHTML = "<li>Bekleyen yorum yok ✅</li>";
+      return;
+    }
 
-  if (comments.length === 0) {
-    list.innerHTML = "<li>Bekleyen yorum yok</li>";
-    return;
-  }
-
-  comments.forEach((c, i) => {
-    const li = document.createElement("li");
-    li.innerHTML = `
-      <div>
-        <strong>${c.profName}</strong>
-        <div class="muted">${c.school}</div>
-        <div>${c.rating} ⭐</div>
-        <p>${c.text}</p>
-      </div>
-      <div>
-        <button onclick="approveComment(${i})">Onayla</button>
-        <button onclick="rejectComment(${i})">Sil</button>
-      </div>
-    `;
-    list.appendChild(li);
-  });
+    comments.forEach(c => {
+      const li = document.createElement("li");
+      li.style.flexDirection = "column";
+      li.style.alignItems = "flex-start";
+      li.innerHTML = `
+        <div style="margin-bottom: 10px;">
+          <strong>Hoca ID:</strong> ${c.profId} | <strong>Puan:</strong> ${c.rating} ⭐
+          <p style="background: #f8fafc; padding: 10px; border-radius: 8px; margin: 5px 0;">${c.text}</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button onclick="approveComment('${c.id}')" style="background:#16a34a">Onayla</button>
+          <button onclick="rejectComment('${c.id}')" style="background:#dc2626">Sil</button>
+        </div>
+      `;
+      list.appendChild(li);
+    });
+  } catch (err) { list.innerHTML = "<li>Yorumlar çekilemedi.</li>"; }
 }
 
-function approveComment(index) {
-  const pending = JSON.parse(localStorage.getItem(PENDING_KEY)) || [];
-  const c = pending[index];
-
-  const key = "prof_" + c.profName;
-  const approved = JSON.parse(localStorage.getItem(key)) || [];
-
-  approved.unshift({
-    text: c.text,
-    rating: c.rating,
-    createdAt: c.createdAt
-  });
-
-  localStorage.setItem(key, JSON.stringify(approved));
-
-  pending.splice(index, 1);
-  localStorage.setItem(PENDING_KEY, JSON.stringify(pending));
-
-  loadComments();
+async function approveComment(id) {
+  await fetch(`${API_BASE}/api/admin/approve-comment/${id}`, { method: "POST" });
+  loadPendingComments();
 }
 
-function rejectComment(index) {
-  const pending = JSON.parse(localStorage.getItem(PENDING_KEY)) || [];
-  pending.splice(index, 1);
-  localStorage.setItem(PENDING_KEY, JSON.stringify(pending));
-  loadComments();
+async function rejectComment(id) {
+  await fetch(`${API_BASE}/api/admin/delete-comment/${id}`, { method: "DELETE" });
+  loadPendingComments();
 }
 
-/* ---------- INIT ---------- */
+// İlk açılışta dashboard'u yükle
 updateStats();
-renderProfessors();
-renderSchools();
