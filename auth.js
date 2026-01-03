@@ -9,36 +9,36 @@ const els = {
   resendBtn: document.getElementById("resendBtn"),
   codeBox: document.getElementById("codeBox"),
   status: document.getElementById("status"),
-  // Onay Kutucukları (HTML'deki ID'lere göre)
+  // HTML dosyasındaki ID'lerle tam uyum
   kvkk: document.getElementById("checkKVKK"),
   rules: document.getElementById("checkRules"),
   auth: document.getElementById("checkAuth")
 };
 
-// Mesaj gösterme fonksiyonu
+// Mesaj gösterme ve otomatik gizleme
 function setMsg(text, type = "") {
   els.status.textContent = text || "";
   els.status.className = "msg " + (type || "");
   els.status.style.display = text ? "block" : "none";
 }
 
-// 1. KOD GÖNDERME (SIGN UP / LOGIN)
+// 1. KOD GÖNDERME
 async function sendCode() {
   const email = els.email.value.trim().toLowerCase();
 
-  // ⚠️ 3'LÜ TİK KONTROLÜ
+  // ⚠️ 3'LÜ TİK KONTROLÜ (Biri bile eksikse kod gitmez)
   if (!els.kvkk.checked || !els.rules.checked || !els.auth.checked) {
     setMsg("Lütfen tüm onay kutucuklarını işaretleyin.", "err");
     return;
   }
 
-  // ⚠️ EDU.TR KONTROLÜ
+  // ⚠️ .EDU.TR ZORUNLULUĞU
   if (!email.endsWith(".edu.tr")) {
-    setMsg("Sadece .edu.tr uzantılı öğrenci maillerini kabul ediyoruz.", "err");
+    setMsg("Üzgünüz, sadece .edu.tr uzantılı üniversite maillerini kabul ediyoruz.", "err");
     return;
   }
 
-  setMsg("Kod gönderiliyor, lütfen bekleyin...", "ok");
+  setMsg("Kod gönderiliyor, lütfen e-postanı kontrol et...", "ok");
   els.sendBtn.disabled = true;
 
   try {
@@ -47,14 +47,15 @@ async function sendCode() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email })
     });
+    
     const data = await res.json();
     
-    if (!res.ok) throw new Error(data.error || "Sunucu hatası");
+    if (!res.ok) throw new Error(data.error || "Kod gönderilemedi.");
 
-    // Başarılıysa kod giriş alanını göster
+    // Başarılıysa: Kod kutusunu aç, gönder butonunu gizle
     els.codeBox.classList.add("is-open");
-    els.sendBtn.style.display = "none"; // Tekrar basılmasın diye gizle
-    setMsg("Kod mailine gönderildi! Spam klasörünü kontrol etmeyi unutma. ✉️", "ok");
+    els.sendBtn.style.display = "none"; 
+    setMsg("Kod gönderildi! Spam (Gereksiz) kutusuna bakmayı unutma. ✉️", "ok");
     els.code.focus();
   } catch (e) {
     setMsg(e.message, "err");
@@ -62,7 +63,7 @@ async function sendCode() {
   }
 }
 
-// 2. KOD DOĞRULAMA (VERIFY)
+// 2. KOD DOĞRULAMA
 async function verifyCode() {
   const email = els.email.value.trim().toLowerCase();
   const code = els.code.value.trim();
@@ -84,12 +85,12 @@ async function verifyCode() {
 
     if (!res.ok) throw new Error(data.error || "Kod hatalı veya süresi dolmuş.");
 
-    // Token'ı kaydet (Türkçe karakter hatasını önlemek için isim hocanisec_token yapıldı)
+    // Token kaydı (hocanisec_token olarak kaydediyoruz)
     if (data.token) {
       localStorage.setItem("hocanisec_token", data.token);
-      setMsg("Başarıyla doğrulandı! Ana sayfaya yönlendiriliyorsun...", "ok");
+      setMsg("Giriş başarılı! Ana sayfaya yönlendiriliyorsunuz... ✅", "ok");
       
-      // 1.5 saniye sonra ana sayfaya at
+      // Başarılıysa 1.5 sn sonra ana sayfaya at
       setTimeout(() => {
         window.location.href = "index.html";
       }, 1500);
@@ -99,10 +100,16 @@ async function verifyCode() {
   }
 }
 
-// Event Listeners
+/* ---------- OLAY İZLEYİCİLER ---------- */
 els.sendBtn.addEventListener("click", sendCode);
 els.verifyBtn.addEventListener("click", verifyCode);
-if(els.resendBtn) els.resendBtn.addEventListener("click", sendCode);
+
+if (els.resendBtn) {
+    els.resendBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        sendCode();
+    });
+}
 
 // Enter tuşu desteği
 els.email.addEventListener("keypress", (e) => { if(e.key === "Enter") sendCode(); });
