@@ -33,6 +33,7 @@
     <nav class="nav-links">
       <a href="index.html">Ana Sayfa</a>
       <a class="nav-cta" href="auth.html" id="authBtn">Giriş Yap</a>
+      <button id="logoutBtn" class="nav-cta" style="display: none; background: #ef4444; border: none; cursor: pointer; font-family: inherit;">Çıkış Yap</button>
     </nav>
   </div>
 </header>
@@ -112,14 +113,34 @@
   const avatarEl = document.getElementById("avatar");
   const commentsDiv = document.getElementById("comments");
   const hintBox = document.getElementById("hintBox");
-  const token = localStorage.getItem("hocaniseç_token");
+  const authBtn = document.getElementById("authBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+  
+  // FIXED: Use consistent token name
+  const token = localStorage.getItem("hocanisec_token");
 
   // Sayfayı Başlat
   nameEl.innerText = profName;
   schoolEl.innerText = schoolName;
   const initials = profName.split(" ").slice(0,2).map(s => s[0]).join("").toUpperCase();
   avatarEl.innerText = initials || "HS";
-  if(token) document.getElementById("authBtn").innerText = "Profilim";
+  
+  // Update navbar based on login status
+  if(token) {
+    authBtn.style.display = "none";
+    logoutBtn.style.display = "inline-block";
+  } else {
+    authBtn.style.display = "inline-block";
+    logoutBtn.style.display = "none";
+  }
+
+  // Logout functionality
+  logoutBtn.addEventListener("click", () => {
+    if (confirm("Çıkış yapmak istediğine emin misin?")) {
+      localStorage.removeItem("hocanisec_token");
+      window.location.href = "index.html";
+    }
+  });
 
   function escapeHtml(str) {
     if(!str) return "";
@@ -191,6 +212,8 @@
 
     try {
       hintBox.innerText = "Gönderiliyor...";
+      hintBox.className = "hint";
+      
       const res = await fetch(`${API_BASE}/api/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -1,19 +1,25 @@
 // frontend/auth.js
 const API_BASE = "https://gardaslar.onrender.com";
-
 const els = {
   email: document.getElementById("email"),
   code: document.getElementById("code"),
   sendBtn: document.getElementById("sendBtn"),
   verifyBtn: document.getElementById("verifyBtn"),
   resendBtn: document.getElementById("resendBtn"),
+  logoutBtn: document.getElementById("logoutBtn"),
   codeBox: document.getElementById("codeBox"),
   status: document.getElementById("status"),
-  // HTML dosyasındaki ID'lerle tam uyum
   kvkk: document.getElementById("checkKVKK"),
   rules: document.getElementById("checkRules"),
   auth: document.getElementById("checkAuth")
 };
+
+// Check if user is already logged in
+const token = localStorage.getItem("hocanisec_token");
+if (token) {
+  // User is already logged in, redirect to homepage
+  window.location.href = "index.html";
+}
 
 // Mesaj gösterme ve otomatik gizleme
 function setMsg(text, type = "") {
@@ -25,22 +31,22 @@ function setMsg(text, type = "") {
 // 1. KOD GÖNDERME
 async function sendCode() {
   const email = els.email.value.trim().toLowerCase();
-
+  
   // ⚠️ 3'LÜ TİK KONTROLÜ (Biri bile eksikse kod gitmez)
   if (!els.kvkk.checked || !els.rules.checked || !els.auth.checked) {
     setMsg("Lütfen tüm onay kutucuklarını işaretleyin.", "err");
     return;
   }
-
+  
   // ⚠️ .EDU.TR ZORUNLULUĞU
   if (!email.endsWith(".edu.tr")) {
     setMsg("Üzgünüz, sadece .edu.tr uzantılı üniversite maillerini kabul ediyoruz.", "err");
     return;
   }
-
+  
   setMsg("Kod gönderiliyor, lütfen e-postanı kontrol et...", "ok");
   els.sendBtn.disabled = true;
-
+  
   try {
     const res = await fetch(`${API_BASE}/send-code`, {
       method: "POST",
@@ -51,7 +57,7 @@ async function sendCode() {
     const data = await res.json();
     
     if (!res.ok) throw new Error(data.error || "Kod gönderilemedi.");
-
+    
     // Başarılıysa: Kod kutusunu aç, gönder butonunu gizle
     els.codeBox.classList.add("is-open");
     els.sendBtn.style.display = "none"; 
@@ -67,24 +73,25 @@ async function sendCode() {
 async function verifyCode() {
   const email = els.email.value.trim().toLowerCase();
   const code = els.code.value.trim();
-
+  
   if (code.length < 6) {
     setMsg("Lütfen 6 haneli kodu girin.", "err");
     return;
   }
-
+  
   setMsg("Doğrulanıyor...", "ok");
-
+  
   try {
     const res = await fetch(`${API_BASE}/verify-code`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, code })
     });
+    
     const data = await res.json();
-
+    
     if (!res.ok) throw new Error(data.error || "Kod hatalı veya süresi dolmuş.");
-
+    
     // Token kaydı (hocanisec_token olarak kaydediyoruz)
     if (data.token) {
       localStorage.setItem("hocanisec_token", data.token);
@@ -100,15 +107,32 @@ async function verifyCode() {
   }
 }
 
+// 3. LOGOUT (İPTAL) FONKSİYONU
+function logout() {
+  els.codeBox.classList.remove("is-open");
+  els.sendBtn.style.display = "block";
+  els.sendBtn.disabled = false;
+  els.email.value = "";
+  els.code.value = "";
+  setMsg("", "");
+}
+
 /* ---------- OLAY İZLEYİCİLER ---------- */
 els.sendBtn.addEventListener("click", sendCode);
 els.verifyBtn.addEventListener("click", verifyCode);
 
 if (els.resendBtn) {
-    els.resendBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        sendCode();
-    });
+  els.resendBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    sendCode();
+  });
+}
+
+if (els.logoutBtn) {
+  els.logoutBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    logout();
+  });
 }
 
 // Enter tuşu desteği

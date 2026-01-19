@@ -4,53 +4,45 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hocanı Seç | Üniversite ve Hoca Keşfet</title>
-
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
   <!-- CSS Bağlantısı -->
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-
 <header class="navbar">
   <div class="nav-inner">
     <a class="logo" href="index.html">hocaniseç</a>
-
     <nav class="nav-links">
       <a href="#kesfet">Keşfet</a>
-      <a href="auth.html" style="font-weight: 600; color: var(--muted);">Giriş Yap</a>
-      <a class="nav-cta" href="auth.html">Ücretsiz Kaydol</a>
+      <!-- These will be shown/hidden based on login status -->
+      <a href="auth.html" id="loginBtn" style="font-weight: 600; color: var(--muted);">Giriş Yap</a>
+      <a class="nav-cta" href="auth.html" id="signupBtn">Ücretsiz Kaydol</a>
+      <!-- This will be shown when user is logged in -->
+      <button id="logoutBtn" class="nav-cta" style="display: none; background: #ef4444; border: none; cursor: pointer; font-family: inherit;">Çıkış Yap</button>
     </nav>
-
     <button class="nav-toggle">
       <span></span><span></span><span></span>
     </button>
   </div>
 </header>
-
 <main>
-
   <!-- HERO SECTION (Arama Alanı) -->
   <section class="hero" id="kesfet">
     <div class="container hero-grid">
       <div>
         <div class="badge">🎓 Öğrenci yorumlarıyla karar ver</div>
-
         <h1>Hocanı seçmeden önce öğren.</h1>
-
         <p class="lead">
           Türkiye'deki 200+ üniversiteyi ve binlerce hocayı gerçek öğrenci deneyimleriyle keşfet.
         </p>
-
         <!-- ARAMA FORMU -->
         <div class="search">
           <input id="searchInput" type="text" placeholder="Hoca veya okul ara... (Örn: ODTÜ veya Celal Şengör)" />
           <button id="searchBtn" type="button">Ara</button>
         </div>
-
         <!-- HIZLI ARAMA BUTONLARI -->
         <div class="quick-chips" id="quickChips">
           <button type="button" data-value="ODTÜ">ODTÜ</button>
@@ -58,17 +50,14 @@
           <button type="button" data-value="İTÜ">İTÜ</button>
           <button type="button" data-value="Hacettepe">Hacettepe</button>
         </div>
-
         <!-- SONUÇLARIN GÖSTERİLECEĞİ ALAN -->
         <div id="results" class="cards-grid"></div>
-
         <p class="meta">
           ⭐ 50.000+ yorum · 👨‍🏫 10.000+ hoca · 🏫 200+ üniversite
         </p>
       </div>
     </div>
   </section>
-
   <!-- ÖZELLİKLER (FEATURES) -->
   <section class="section section-alt" id="features">
     <div class="container">
@@ -76,20 +65,17 @@
         <h2>Karar vermeyi kolaylaştır.</h2>
         <p class="muted">Kısa, net ve anonim geri bildirimlerle.</p>
       </div>
-
       <div class="grid-3">
         <div class="feature">
           <div class="feature-ico">💬</div>
           <h3>Gerçek öğrenci yorumları</h3>
           <p>Hocalar anlatım, adalet ve zorluk gibi başlıklarda dürüstçe değerlendirilir.</p>
         </div>
-
         <div class="feature">
           <div class="feature-ico">⚖️</div>
           <h3>Kıyasla ve seç</h3>
           <p>Aynı okul içindeki hocaları yan yana düşünmek çok daha kolay.</p>
         </div>
-
         <div class="feature">
           <div class="feature-ico">🕵️‍♂️</div>
           <h3>Anonim & Rahat</h3>
@@ -98,13 +84,38 @@
       </div>
     </div>
   </section>
-
 </main>
+
+<!-- AUTH CHECK SCRIPT (Must load before script.js) -->
+<script>
+  // Check if user is logged in and update navbar accordingly
+  const token = localStorage.getItem("hocanisec_token");
+  const loginBtn = document.getElementById("loginBtn");
+  const signupBtn = document.getElementById("signupBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  if (token) {
+    // User is logged in - hide login/signup buttons, show logout
+    loginBtn.style.display = "none";
+    signupBtn.style.display = "none";
+    logoutBtn.style.display = "inline-block";
+  } else {
+    // User is not logged in - show login/signup buttons, hide logout
+    loginBtn.style.display = "inline-block";
+    signupBtn.style.display = "inline-block";
+    logoutBtn.style.display = "none";
+  }
+
+  // Logout functionality
+  logoutBtn.addEventListener("click", () => {
+    if (confirm("Çıkış yapmak istediğine emin misin?")) {
+      localStorage.removeItem("hocanisec_token");
+      window.location.reload();
+    }
+  });
+</script>
 
 <!-- JAVASCRIPT -->
 <script src="script.js" defer></script>
-
 </body>
-</html> 
- 
- 
+</html>
