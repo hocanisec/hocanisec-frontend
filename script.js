@@ -38,7 +38,7 @@ function superNormalize(str = "") {
 }
 
 /* =====================
-   4. ARAMA MOTORU
+   4. ARAMA MOTORU (FIXED - No Duplicates)
 ===================== */
 async function search() {
   if (!INPUT || !RESULT) return;
@@ -51,19 +51,25 @@ async function search() {
   // --- A. OKUL ARAMA ---
   let foundSchools = new Set();
   
-  // Alias (METU/ODTÜ) kontrolü
+  // Step 1: Check aliases FIRST (this takes priority)
+  let aliasMatch = null;
   Object.keys(ALIASES).forEach(key => {
-    if (superNormalize(key).includes(q)) {
-      foundSchools.add(ALIASES[key]);
+    if (superNormalize(key) === q) {
+      aliasMatch = ALIASES[key];
     }
   });
 
-  // Normal okul listesi kontrolü
-  UNIVERSITIES.forEach(s => {
-    if (superNormalize(s).includes(q)) {
-      foundSchools.add(s);
-    }
-  });
+  // If we found an exact alias match, ONLY add that one
+  if (aliasMatch) {
+    foundSchools.add(aliasMatch);
+  } else {
+    // Step 2: If no exact alias match, search the full university list
+    UNIVERSITIES.forEach(s => {
+      if (superNormalize(s).includes(q)) {
+        foundSchools.add(s);
+      }
+    });
+  }
 
   // Okul Kartlarını Bas
   foundSchools.forEach(s => {
