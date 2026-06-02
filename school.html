@@ -3,13 +3,43 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Okul Profili</title>
-
+  <title>Okul Profili | HocanıSeç</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
   <link rel="stylesheet" href="style.css" />
+  <style>
+    .faculty-section { margin-top: 32px; }
+    .faculty-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+    .faculty-btn {
+      padding: 8px 16px; border-radius: 20px; border: 1.5px solid #e2e8f0;
+      background: white; cursor: pointer; font-size: 13px; font-weight: 600;
+      color: #475569; transition: all 0.2s; font-family: inherit;
+    }
+    .faculty-btn:hover { border-color: #2563eb; color: #2563eb; background: #eff6ff; }
+    .faculty-btn.active { background: #2563eb; color: white; border-color: #2563eb; }
+    .sort-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+    .sort-bar span { font-size: 13px; font-weight: 600; color: #64748b; }
+    .sort-btn {
+      padding: 6px 14px; border-radius: 16px; border: 1.5px solid #e2e8f0;
+      background: white; cursor: pointer; font-size: 12px; font-weight: 600;
+      color: #475569; transition: all 0.2s; font-family: inherit;
+    }
+    .sort-btn:hover { border-color: #2563eb; color: #2563eb; }
+    .sort-btn.active { background: #0f172a; color: white; border-color: #0f172a; }
+    .prof-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    .prof-table th {
+      text-align: left; padding: 10px 12px; font-size: 12px; font-weight: 700;
+      color: #94a3b8; border-bottom: 1.5px solid #e2e8f0; text-transform: uppercase;
+    }
+    .prof-table td { padding: 12px; font-size: 14px; border-bottom: 1px solid #f1f5f9; }
+    .prof-table tr:hover td { background: #f8fafc; cursor: pointer; }
+    .prof-name { font-weight: 700; color: #0f172a; }
+    .prof-dept { color: #64748b; font-size: 13px; }
+    .prof-rating { font-weight: 800; color: #2563eb; }
+    .empty-msg { text-align: center; padding: 40px; color: #94a3b8; font-size: 14px; }
+    .loading-msg { text-align: center; padding: 40px; color: #94a3b8; }
+  </style>
 </head>
 <body>
 
@@ -17,94 +47,162 @@
   <div class="nav-inner">
     <a class="logo" href="index.html">hocaniseç</a>
     <nav class="nav-links">
-      <a href="index.html#okullar">Okullar</a>
-      <a href="index.html#hocalar">Hocalar</a>
-      <a class="nav-cta" href="index.html#gir">Giriş</a>
+      <a href="index.html">Ana Sayfa</a>
+      <a class="nav-cta" href="auth.html">Giriş Yap</a>
     </nav>
   </div>
 </header>
 
 <main class="page">
   <div class="container">
-    <a class="back-link" href="index.html#okullar">← Okullara dön</a>
+    <a class="back-link" href="index.html">← Ana sayfaya dön</a>
 
     <section class="school-head">
       <h1 id="schoolName">Okul</h1>
-      <p class="muted">Kategorilere göre puanlar</p>
+      <p class="muted" id="schoolMeta">Yükleniyor...</p>
     </section>
 
-    <section class="school-grid">
-      <div class="metric">
-        <div class="metric-top">
-          <span>🎓 Akademik</span>
-          <strong id="academic">0.0</strong>
-        </div>
-        <div class="bar"><i id="barAcademic"></i></div>
+    <!-- FAKÜLTEler -->
+    <section class="faculty-section panel">
+      <h2>Fakülte & Hocalar</h2>
+      <div class="faculty-bar" id="facultyBar">
+        <button class="faculty-btn active" data-faculty="">Tümü</button>
       </div>
 
-      <div class="metric">
-        <div class="metric-top">
-          <span>🏫 Kampüs</span>
-          <strong id="campus">0.0</strong>
-        </div>
-        <div class="bar"><i id="barCampus"></i></div>
+      <!-- SIRALAMA -->
+      <div class="sort-bar">
+        <span>Sırala:</span>
+        <button class="sort-btn active" data-sort="name">İsim (A-Z)</button>
+        <button class="sort-btn" data-sort="avg_rating">En Yüksek Puan</button>
+        <button class="sort-btn" data-sort="comment_count">En Çok Yorum</button>
       </div>
 
-      <div class="metric">
-        <div class="metric-top">
-          <span>👨‍🏫 Eğitmenler</span>
-          <strong id="staff">0.0</strong>
-        </div>
-        <div class="bar"><i id="barStaff"></i></div>
+      <!-- HOCA LİSTESİ -->
+      <div id="profList">
+        <div class="loading-msg">Hocalar yükleniyor...</div>
       </div>
-
-      <div class="metric">
-        <div class="metric-top">
-          <span>🌍 Sosyal</span>
-          <strong id="social">0.0</strong>
-        </div>
-        <div class="bar"><i id="barSocial"></i></div>
-      </div>
-    </section>
-
-    <section class="panel school-summary">
-      <h2>Genel görünüm</h2>
-      <p class="muted" id="avgText">—</p>
     </section>
   </div>
 </main>
 
 <script>
+  const API_BASE = "https://gardaslar.onrender.com";
   const p = new URLSearchParams(window.location.search);
+  const schoolName = p.get("name") || "Okul";
 
-  const name = p.get("name") || "Okul";
-  const academic = Number(p.get("academic") || 0);
-  const campus = Number(p.get("campus") || 0);
-  const staff = Number(p.get("staff") || 0);
-  const social = Number(p.get("social") || 0);
+  document.getElementById("schoolName").innerText = schoolName;
+  document.title = schoolName + " | HocanıSeç";
 
-  document.getElementById("schoolName").innerText = name;
+  let allProfs = [];
+  let currentFaculty = "";
+  let currentSort = "name";
 
-  function setMetric(id, val) {
-    document.getElementById(id).innerText = val.toFixed(1) + " ⭐";
+  // Tüm hocaları çek
+  async function loadProfs() {
+    try {
+      const res = await fetch(`${API_BASE}/api/school-profs?school=${encodeURIComponent(schoolName)}`);
+      const data = await res.json();
+      allProfs = data.profs || [];
+
+      document.getElementById("schoolMeta").innerText =
+        allProfs.length + " hoca · fakülteye göre filtrele ve sırala";
+
+      buildFacultyBar();
+      renderTable();
+    } catch (err) {
+      document.getElementById("profList").innerHTML =
+        '<div class="empty-msg">Hocalar yüklenemedi.</div>';
+    }
   }
-  setMetric("academic", academic);
-  setMetric("campus", campus);
-  setMetric("staff", staff);
-  setMetric("social", social);
 
-  function setBar(id, val) {
-    const pct = Math.max(0, Math.min(100, (val / 5) * 100));
-    document.getElementById(id).style.width = pct + "%";
+  // Fakülte butonlarını oluştur
+  function buildFacultyBar() {
+    const faculties = [...new Set(allProfs.map(p => p.faculty || "").filter(Boolean))].sort();
+    const bar = document.getElementById("facultyBar");
+    bar.innerHTML = '<button class="faculty-btn active" data-faculty="">Tümü (' + allProfs.length + ')</button>';
+
+    faculties.forEach(f => {
+      const count = allProfs.filter(p => p.faculty === f).length;
+      const btn = document.createElement("button");
+      btn.className = "faculty-btn";
+      btn.dataset.faculty = f;
+      btn.textContent = f + " (" + count + ")";
+      bar.appendChild(btn);
+    });
+
+    bar.querySelectorAll(".faculty-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        bar.querySelectorAll(".faculty-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentFaculty = btn.dataset.faculty;
+        renderTable();
+      });
+    });
   }
-  setBar("barAcademic", academic);
-  setBar("barCampus", campus);
-  setBar("barStaff", staff);
-  setBar("barSocial", social);
 
-  const avg = (academic + campus + staff + social) / 4;
-  document.getElementById("avgText").innerText =
-    "Ortalama puan: " + avg.toFixed(1) + " ⭐ (4 kategori ortalaması)";
+  // Tabloyu render et
+  function renderTable() {
+    let filtered = currentFaculty
+      ? allProfs.filter(p => p.faculty === currentFaculty)
+      : allProfs;
+
+    // Sırala
+    filtered = [...filtered].sort((a, b) => {
+      if (currentSort === "name") return (a.name || "").localeCompare(b.name || "", "tr");
+      if (currentSort === "avg_rating") return (b.avg_rating || 0) - (a.avg_rating || 0);
+      if (currentSort === "comment_count") return (b.comment_count || 0) - (a.comment_count || 0);
+      return 0;
+    });
+
+    const container = document.getElementById("profList");
+
+    if (filtered.length === 0) {
+      container.innerHTML = '<div class="empty-msg">Bu fakültede hoca bulunamadı.</div>';
+      return;
+    }
+
+    const rows = filtered.map(prof => `
+      <tr onclick="window.location.href='profile.html?id=${prof.id}&name=${encodeURIComponent(prof.name)}&school=${encodeURIComponent(prof.school)}'">
+        <td>
+          <div class="prof-name">${escHtml(prof.name)}</div>
+          <div class="prof-dept">${escHtml(prof.department || "")}</div>
+        </td>
+        <td>${escHtml(prof.faculty || "—")}</td>
+        <td class="prof-rating">${prof.avg_rating > 0 ? prof.avg_rating.toFixed(1) + " ⭐" : "—"}</td>
+        <td>${prof.comment_count || 0} yorum</td>
+      </tr>
+    `).join("");
+
+    container.innerHTML = `
+      <table class="prof-table">
+        <thead>
+          <tr>
+            <th>Hoca</th>
+            <th>Fakülte</th>
+            <th>Puan</th>
+            <th>Yorum</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+
+  function escHtml(str) {
+    return String(str || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  // Sıralama butonları
+  document.querySelectorAll(".sort-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".sort-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentSort = btn.dataset.sort;
+      renderTable();
+    });
+  });
+
+  loadProfs();
 </script>
 
 </body>
